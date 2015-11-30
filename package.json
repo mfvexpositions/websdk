@@ -5,13 +5,13 @@
   "main": "build/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
-    ,"build"     : "node ./samples/src/web/build/index.js --od ./samples/public/assets/artifacts --w"
-    ,"buildDist" : "node ./samples/src/web/build/index.js --od ./samples/public/assets/artifacts --w --env prod"
+    ,"build"     : "node ./samples/src/web/build/index.js --od ./samples/public/artifacts --w"
+    ,"buildDist" : "node ./samples/src/web/build/index.js --od ./samples/public/artifacts --w --env prod"
     ,"start"     : "live-server --path=../../samples/public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jstanley/web-sdk.git"
+    "url": "git+https://github.com/jstanley/websdk.git"
   },
   "keywords": [
     "websdk",
@@ -29,9 +29,9 @@
   "author": "Julio Stanley",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jstanley/web-sdk/issues"
+    "url": "https://github.com/jstanley/websdk/issues"
   },
-  "homepage": "https://jstanley.github.io/web-sdk",
+  "homepage": "https://jstanley.github.io/websdk",
   "dependencies": {
     "lodash" : "*"
     ,"debug" : "2.2.0"
@@ -48,10 +48,9 @@
     ,"angular-ui-layout": "1.3.0"
     ,"jquery-ui": "1.10.5"
     ,"spin" : "0.0.1"
-  }
 
-  ,"devDependencies" : {
-    "bower": "*"
+
+    ,"bower": "*"
     ,"webpack": "*"
     ,"optimist": "*"
     ,"strip-loader": "0.1.0"
@@ -67,5 +66,8 @@
     ,"extract-text-webpack-plugin": "*"
     ,"amd-define-factory-patcher-loader": "*"
     ,"live-server": "*"
+  }
+
+  ,"devDependencies" : {
   }
 }

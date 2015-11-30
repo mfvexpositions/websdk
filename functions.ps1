@@ -18,14 +18,14 @@ function mklink {
 }
 
 # Utility build function
-# Does: node ./src/web/build/index.js --od ./public/assets/artifacts
+# Does: node ./src/web/build/index.js --od ./public/artifacts
 function websdk-build {
   Start-Process `
     -FilePath "$(which node)" `
     -WorkingDirectory $(pwd) `
     -NoNewWindow `
     -Wait `
-    -ArgumentList ("$(pwd)\src\web\build\index.js --od $(pwd)\public\assets\artifacts\" + $args)
+    -ArgumentList ("$(pwd)\src\web\build\index.js --od $(pwd)\public\artifacts\" + $args)
 }
 
 Write-Host "Make sure to source this file, by running (notice the 2 seperate initial dots): . ./node_modules/websdk/functions.ps1"

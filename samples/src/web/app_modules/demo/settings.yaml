@@ -3,4 +3,5 @@ name: demo
 selector: demoapp
 prefix: dm
 description: Demo declaration of a module (in this case an app)
-dependencies: null
+dependencies:
+  - angupoly

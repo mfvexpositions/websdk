@@ -1,4 +1,12 @@
 <h1>App</h1>
+<demo-welcome-title angupoly="{label:'$root.settings.selector'}"></demo-welcome-title>
+<paper-input
+  auto-validate="true"
+  pattern="^[A-Za-z'\s-]*$"
+  error-message="No special characters allowed"
+  label="Description being used"
+  angupoly="{value:'$root.settings.description'}"
+></paper-input>
 <code>
   <pre>{{settings|json}}</pre>
 </code>

@@ -36,20 +36,25 @@ module.exports = function webpackConfig( dirName, done ) {
     ,publicPath        = argv.pp
     ,fileDir           = argv.fp 
     ,devtool           = argv.dt
-    ,allowSM           = argv.sm
     ,env               = argv.env
     ,dedupe            = argv.dd
     ,profile           = argv.pf
-    ,stripLog          = argv.kl || (argv.env!=='prod'&&!argv.kl) ? '' : '!strip-loader?strip[]=debug,strip[]=console.log'
+    ,allowSM           = argv.sm || (env!=='prod') // If not prod then source maps are allowed
+    ,stripLog          = argv.kl || (argv.env!=='prod'&&!argv.kl) ? '' : '!strip?strip[]=debug,strip[]=console.log'
     ,webpack           = require('webpack')
+    ,defaultFilePlugin = require('./plugin/DirectoryDynamicDefaultFilePlugin')
     // ,ngAnnotate     = require('ng-annotate-webpack-plugin')
     ,ExtractTextPlugin = require('extract-text-webpack-plugin')
     ,fs                = require('fs')
     ,path              = require('path')
     ,includeDir        = fs.readdirSync(argv.cwd).filter(function(it){return !it.match(/node_modules|web_modules/)}).map(function(it){return 'websdk.'+it})
     ,config            = {
+      // Not from webpack
+      defaultFiles               : null // If user has set to a value no dynamic default files will be used
+      ,dynamicDefaultFilesIgnore : /debug$/ // Ignoring some directories, that are know to belong to modules with files named the same as the directory
+
       // context: argv.c,
-      entry: {
+      ,entry: {
         start : dirName + '/../app_modules/index.js' // Starting point
       }
       ,lib     : {} // The concept of libraries is part of the websdk
@@ -57,26 +62,45 @@ module.exports = function webpackConfig( dirName, done ) {
       ,cache   : true
       ,output  : {
         path           : outDir
-        ,filename      : "[name].bundle.js"
-        ,chunkFilename : "[name].chunk.js"
+        ,filename      : '[name].bundle.js'
+        ,chunkFilename : '[name].chunk.js'
         ,publicPath    : publicPath
       }
       ,resolve: {
-        modulesDirectories: ["app_modules", "node_modules", "web_modules"] // Only main files
+        modulesDirectories: ['app_modules', 'node_modules', 'web_modules'] // Only main files
+      }
+      // To resolve loaders
+      ,resolveLoader: {
+        // These are default configuration, kept here as a reference
+        modulesDirectories : ['web_loaders', 'web_modules', 'node_loaders', 'node_modules', 'build']
+        ,extensions        : ['', '.webpack-loader.js', '.web-loader.js', '.loader.js', '.js']
+        ,packageMains      : ['webpackLoader', 'webLoader', 'loader', 'main']
+        ,moduleTemplates   : ['*-webpack-loader', '*-web-loader', '*-loader']
+        // Adding alias for babel and web loader
+        ,alias : {
+          es2015 : 'babel?optional[]=runtime'
+          ,web   : 'link' + (env!=='dev' ? '?minifyHTML=true' : '')
+          ,clean : stripLog ? stripLog.replace(/!/,'') : 'noop'
+        }
       }
       ,plugins : []
       ,module  : {
         loaders: [
           // Javascript excluding node_modules and web_modules except for this library
-           { test: /\.js$/, loader: "babel?optional[]=runtime"+stripLog, exclude: /(node_modules|web_modules)/ }
-          ,{ test: /\.js$/, loader: "babel?optional[]=runtime"+stripLog, include: new RegExp(includeDir.join('|')) }
-          ,{ test: /\.less$/, loader: "style!css!less" }
-          ,{ test: /\.less.vendor$/, loader: env!=='dev' ? ExtractTextPlugin.extract('style', 'css!less') : "style!css!less" }
-          ,{ test: /\.yaml$/, loader: "json!yaml" }
-          ,{ test: /\.html$/, loader: "html" }
+           { test: /\.js$/, loader: 'es2015'+stripLog, exclude: /(node_modules|web_modules)/ }
+          ,{ test: /\.js$/, loader: 'es2015'+stripLog, include: new RegExp(includeDir.join('|')) }
+          ,{ test: /\.less$/, loader: 'style!css'+ (allowSM ? '?sourceMap=true' : '') +'!less' + (allowSM ? '?sourceMap=true' : '') }
+          ,{ test: /\.less.vendor$/, loader: env!=='dev' ? ExtractTextPlugin.extract('style', 'css!less') : 'style!css!less' }
+          ,{ test: /\.yaml$/, loader: 'json!yaml' }
+          ,{ test: /\.html$/, loader: 'html', exclude: /web_modules/ } // IMPORTANT: Loading html as string inside of web modules is not possible unless using (html!file-path)
+
+          // HTML Imports
+          // Since we are already using html for standard html in order to use the web loader the extension of the file
+          // must be .web, this will enable the usage of <link rel="import">
+          ,{ test: /\.web$/, loader: 'es2015'+stripLog+'!web' }
 
           // Fonts
-          ,{ test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader?name='+fileDir+"/[hash].[ext]"}
+          ,{ test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader?name='+fileDir+'/[hash].[ext]'}
           ,{ test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'url-loader?name='+fileDir+'/[hash].[ext]&lmit=10000&mimetype=application/font-woff'}
 
           // Images
@@ -100,9 +124,21 @@ module.exports = function webpackConfig( dirName, done ) {
 
   // Create vendor entries
   // TODO: This approach copies the entire vendor library even if not used, find a better solution
+  var defaultFiles = ['index'];
   config.entry.common = __dirname + '/runtime.vendor.js'; // Common modules between entry files will go here (should be the first file to be loaded)
   config.plugins.push(
-    new webpack.optimize.CommonsChunkPlugin( /*bundlename*/ 'common', /*filename*/ 'common.bundle.js' )
+    new webpack.ResolverPlugin([
+      new defaultFilePlugin(function(path){
+        // Check if default files should be modified
+        if(config.defaultFiles) return config.defaultFiles;
+        if(path.match(config.dynamicDefaultFilesIgnore)) return ['index'];
+
+        // Otherwise add the directory name as the possible default file name too
+        var name = path.split('\\').pop();
+        return ['index',name];
+      })
+    ], ['normal'])
+    ,new webpack.optimize.CommonsChunkPlugin( /*bundlename*/ 'common', /*filename*/ 'common.bundle.js' )
     ,new ExtractTextPlugin('[name].css')
   )
   // Remove the logging module from source
@@ -298,7 +334,7 @@ function createChunkSplits(config, dirName){
 
   // Create the libraries file, this file can be committed if desired
   fs.writeFileSync( fileOut,
-    "import Registry from 'websdk/essential/module/registry';\n"
+    'import Registry from "websdk/essential/module/registry";\n'
     + loaders.join("\n")
   );
 }

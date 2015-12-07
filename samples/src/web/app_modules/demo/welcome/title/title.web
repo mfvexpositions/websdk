@@ -1,0 +1,28 @@
+
+<link rel="import" href="~polymer/polymer.html">
+<link rel="import" href="~paper-input/paper-input.html">
+
+<dom-module id="demo-welcome-title">
+  <template>
+
+    <style>
+      :host {
+        display : block;
+        color   : green;
+      }
+    </style>
+
+    <paper-input label="[[label]]"></paper-input>
+
+  </template>
+</dom-module>
+
+<script>
+  Polymer({
+    is: 'demo-welcome-title',
+
+    properties: {
+      label: 'Hello'
+    }
+  });
+</script>

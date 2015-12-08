@@ -49,9 +49,17 @@ module.exports = function webpackConfig( dirName, done ) {
     ,path              = require('path')
     ,includeDir        = fs.readdirSync(argv.cwd).filter(function(it){return !it.match(/node_modules|web_modules/)}).map(function(it){return 'websdk.'+it})
     ,config            = {
-      // Not from webpack
-      defaultFiles               : null // If user has set to a value no dynamic default files will be used
-      ,dynamicDefaultFilesIgnore : /debug$/ // Ignoring some directories, that are know to belong to modules with files named the same as the directory
+      // Configuration specific to the websdk
+      websdk : {
+        defaultFiles               : null // If user has set to a value no dynamic default files will be used
+        ,dynamicDefaultFilesIgnore : /debug$/ // Ignoring some directories, that are know to belong to modules with files named the same as the directory
+        
+        // Lib is used to create chunks that can later be lazy loaded
+        // Libs should include, <index>.js, lib.js and settings.yaml
+        // They should export form their <index>.js the lib.init function
+        // Use { registryKeyName: 'modulename/some/path/to/lib/<index>' }
+        ,lib : null
+      }
 
       // context: argv.c,
       ,entry: {
@@ -135,8 +143,8 @@ module.exports = function webpackConfig( dirName, done ) {
     new webpack.ResolverPlugin([
       new defaultFilePlugin(function(path){
         // Check if default files should be modified
-        if(config.defaultFiles) return config.defaultFiles;
-        if(path.match(config.dynamicDefaultFilesIgnore)) return ['index'];
+        if(config.websdk.defaultFiles) return config.websdk.defaultFiles;
+        if(path.match(config.websdk.dynamicDefaultFilesIgnore)) return ['index'];
 
         // Otherwise add the directory name as the possible default file name too
         var name = path.split('\\').pop();
@@ -312,7 +320,7 @@ function scanDir(dir, done) {
 function createChunkSplits(config, dirName){
 
   // Only if there are libs to process
-  if(!(config.websdk&&config.websdk.lib)) return;
+  if(!config.websdk.lib) return;
 
   // Notify about it
   console.log('Creating library splits');

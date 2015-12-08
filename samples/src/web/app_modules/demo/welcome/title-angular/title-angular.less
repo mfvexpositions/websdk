@@ -1,0 +1,10 @@
+
+// Since standard css does not live within a shadow DOM
+// we need to be as specific as possible and we should
+// always use the name of the component (directive)
+dm-title-angular {
+  display: block;
+  > p {
+    color: blue;
+  }
+}

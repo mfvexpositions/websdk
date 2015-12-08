@@ -1,6 +1,6 @@
 
 <link rel="import" href="~polymer/polymer.html">
-<link rel="import" href="~paper-input/paper-input.html">
+<link rel="import" href="~paper-button/paper-button.html">
 
 <dom-module id="demo-welcome-title">
   <template>
@@ -12,8 +12,11 @@
       }
     </style>
 
-    <em>Text used for label: [[label]]</em>
-    <paper-input label="[[label]]"></paper-input>
+    <p>
+      <paper-input label="No effect overall, but cool" value="{{label}}"></paper-input>
+      <paper-button toggles raised class="custom green">[[label]]</paper-button>
+    </p>
+
 
   </template>
 </dom-module>
@@ -23,7 +26,10 @@
     is: 'demo-welcome-title',
 
     properties: {
-      label: 'Hello'
+      label: {
+        type    : 'String'
+        ,notify : true
+      }
     }
   });
 </script>

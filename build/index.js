@@ -101,8 +101,8 @@ module.exports = function webpackConfig( dirName, done ) {
           // use the web loader the extension of the file must be .web
           // this will enable the usage of <link rel="import"> and allow
           // es2015 to be used against it
-          ,{ test: /\.html$/, loader: 'es2015'+stripLog+'!web', exclude: /(polymer)/ }
-          ,{ test: /\.html$/, loader: 'clean!web', include: /(polymer)/ }
+          ,{ test: /\.html$/, loader: 'es2015'+stripLog+'!web', exclude: /(polymer|paper-|iron-)/ }
+          ,{ test: /\.html$/, loader: 'clean!web', include: /(polymer|paper-|iron-)/ }
 
           // Fonts
           ,{ test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader?name='+fileDir+'/[hash].[ext]'}

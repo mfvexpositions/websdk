@@ -29,7 +29,7 @@ class AngularLib extends EssentialLib {
     // Register the component using the configuration given
     var self=this;
     this.register(function init(config) {
-      wcConfig.name = name[0]==='_' ? name.substr(1) : self.getId(strCapitalize(name));
+      wcConfig.name = name[0]==='_' ? name.substr(1) : self.getId(name.substr(0,1).toUpperCase()+name.substr(1));
       config.ngApp.directive(wcConfig.name,()=>wcConfig);
       debug(`Registered component: ${wcConfig.name}`);
     });

@@ -30,7 +30,8 @@ import 'paper-input/paper-input.html';
 
 // Include some files from this application
 import './welcome';
-import './welcome/title/title.html';
+import './welcome/title-polymer/title-polymer.html';
+import './welcome/title-angular'; // Javascript files have default file name matching the parent directory
 
 // We will enable the logging for demo purposes
 // FOR DEMO PURPOSES, USUALLY YOU WOULD TYPE THIS INTO THE CONSOLE AS NEEDED

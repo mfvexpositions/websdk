@@ -10,7 +10,7 @@ class Lib extends AngularLib {
 
 	// ID Generator
 	getId(name) {
-		return '${settings.prefix}${name}';
+		return `${settings.prefix}${name}`;
 	}
 
 	// Retrieving settings

@@ -2,7 +2,7 @@
 // IMPORTANT: This directive is similar to the funccionality provided by html imports
 // but it allows for styling and works with the modules/libraries approach provided
 // by this web sdk
-var tmpl = require('./ensure.html');
+var tmpl = require('./ensure.htm');
 
 // Get the registry
 import Debug from '../../../../log';

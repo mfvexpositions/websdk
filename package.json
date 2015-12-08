@@ -1,13 +1,15 @@
 {
   "name": "websdk",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Web SDK is a set of conventions and code to provide modularity and lazy loading for angular, polymer, and others under a unified and simplified build approach through webpack",
   "main": "build/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "node ./samples/src/web/build/index.js --od ./samples/public/artifacts --w",
     "buildDist": "node ./samples/src/web/build/index.js --od ./samples/public/artifacts --w --env prod",
-    "start": "live-server --path=../../samples/public"
+    "start": "live-server --path=../../samples/public",
+    "postinstall": "bower install",
+    "postupdate": "bower update"
   },
   "repository": {
     "type": "git",

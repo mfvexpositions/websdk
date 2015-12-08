@@ -34,7 +34,7 @@ This is just the initial version, more to come soon. Many things supported in th
 ## Things to notice or not obvious in the samples
 - Open your console and look at the logs
 - Angular is mixed with polymer
-- HTML Imports are allowed, and work with webpack notice [demo.js](./samples/src/web/app_modules/demo) and title-[polymer.html](./samples/src/web/app_modules/demo/welcome/title-polyer)
+- HTML Imports are allowed, and work with webpack notice [demo.js](./samples/src/web/app_modules/demo) and [title-polymer.html](./samples/src/web/app_modules/demo/welcome/title-polymer)
 - The build supports chunks by using ```build.config.websdk.lib = {name:'path'}```
 - Chunks can be loaded async using ```<ensure import="">content pending</ensure>```
 - Paper elements and angular code are bundled

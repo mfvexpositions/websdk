@@ -90,14 +90,19 @@ module.exports = function webpackConfig( dirName, done ) {
            { test: /\.js$/, loader: 'es2015'+stripLog, exclude: /(node_modules|web_modules)/ }
           ,{ test: /\.js$/, loader: 'es2015'+stripLog, include: new RegExp(includeDir.join('|')) }
           ,{ test: /\.less$/, loader: 'style!css'+ (allowSM ? '?sourceMap=true' : '') +'!less' + (allowSM ? '?sourceMap=true' : '') }
-          ,{ test: /\.less.vendor$/, loader: env!=='dev' ? ExtractTextPlugin.extract('style', 'css!less') : 'style!css!less' }
           ,{ test: /\.yaml$/, loader: 'json!yaml' }
-          ,{ test: /\.html$/, loader: 'html', exclude: /web_modules/ } // IMPORTANT: Loading html as string inside of web modules is not possible unless using (html!file-path)
+
+          // Use htm extenstion for html files that should be loaded as strings
+          // In case of an extension html, then use require("!!html!file-path") as needed
+          ,{ test: /\.htm$/, loader: 'html' }
 
           // HTML Imports
-          // Since we are already using html for standard html in order to use the web loader the extension of the file
-          // must be .web, this will enable the usage of <link rel="import">
-          ,{ test: /\.web$/, loader: 'es2015'+stripLog+'!web' }
+          // Since we are already using html for standard html in order to 
+          // use the web loader the extension of the file must be .web
+          // this will enable the usage of <link rel="import"> and allow
+          // es2015 to be used against it
+          ,{ test: /\.html$/, loader: 'es2015'+stripLog+'!web', exclude: /(polymer)/ }
+          ,{ test: /\.html$/, loader: 'clean!web', include: /(polymer)/ }
 
           // Fonts
           ,{ test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader?name='+fileDir+'/[hash].[ext]'}
@@ -125,7 +130,7 @@ module.exports = function webpackConfig( dirName, done ) {
   // Create vendor entries
   // TODO: This approach copies the entire vendor library even if not used, find a better solution
   var defaultFiles = ['index'];
-  config.entry.common = __dirname + '/runtime.vendor.js'; // Common modules between entry files will go here (should be the first file to be loaded)
+  config.entry.common = __dirname + '/vendors/bundle.js'; // Common modules between entry files will go here (should be the first file to be loaded)
   config.plugins.push(
     new webpack.ResolverPlugin([
       new defaultFilePlugin(function(path){
@@ -250,6 +255,8 @@ var
   ,path = require('path')
 ;
 
+// ==================================================
+
 // Utility function to remove directories
 function rmDir(dirPath){
   console.log('Attempting to clean: ' + dirPath);
@@ -267,8 +274,13 @@ function rmDir(dirPath){
   catch(e) { return; }
 }
 
+
+// ==================================================
+
+
 // Utility function to scan directories
 function scanDir(dir, done) {
+  console.log('Scanning directory: '+dir);
   var results = [];
   fs.readdir(dir, function(err, list) {
     if (err) return done(err);
@@ -292,11 +304,15 @@ function scanDir(dir, done) {
   });
 };
 
-// Automatically find directories that are intended to become libraries
+
+// ==================================================
+
+
+// Create a file with references that will create library chunks if used
 function createChunkSplits(config, dirName){
 
   // Only if there are libs to process
-  if(!config.lib) return;
+  if(!(config.websdk&&config.websdk.lib)) return;
 
   // Notify about it
   console.log('Creating library splits');
@@ -317,11 +333,11 @@ function createChunkSplits(config, dirName){
   var
     loaders = []
     fileOut = dirName + '/libraries.websdk.js'
-    names   = Object.keys(config.lib)
+    names   = Object.keys(config.websdk.lib)
   ;
   if( !names.length ) return;
   names.forEach(function(it){
-    var libPath = path.resolve(config.lib[it]).replace(/\\/g,'/');
+    var libPath = path.resolve(config.websdk.lib[it]).replace(/\\/g,'/');
 
     // Add the definition for this loader
     loaders.push(
@@ -337,4 +353,6 @@ function createChunkSplits(config, dirName){
     'import Registry from "websdk/essential/module/registry";\n'
     + loaders.join("\n")
   );
+  console.log('Created a library at: ' + fileOut);
+  console.log('If you require this file from a runtime file, chunks will be generated for you');
 }

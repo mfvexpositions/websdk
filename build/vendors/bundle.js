@@ -4,6 +4,7 @@
 var jquery      = require('jquery');
 window.jquery21 = jquery;
 require('angular');
+require('./angupoly');
 
 // Load other libraries
 // require('some-lib-wrapped')(window, jquery);

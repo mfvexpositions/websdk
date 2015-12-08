@@ -19,7 +19,7 @@ var
 
 // Set the entry point (you could have multiple, depending on how many segments
 // you have on your app, they can be only libraries that attach themselved ot the running app)
-build.config.entry['start'] = __dirname + '/../app_modules/demo/index.js';
+build.config.entry['start'] = __dirname + '/../app_modules/demo/demo.js';
 
 // Run the build
 build.run();

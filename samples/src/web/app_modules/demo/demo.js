@@ -3,32 +3,34 @@
 // but in the websdk HTML imports are not promoted. I prefer HTML
 // imports though :)
 // =======================================
-require('./index.less');
+require('./demo.less');
 
 var
   settings = require('./settings.yaml')
-  ,tmpl    = require('./index.html')
+  ,tmpl    = require('./demo.htm')
 ;
 
 // =======================================
 
 // Load some libraries
 import angular from 'angular';
-import 'angu-poly/angupoly';
+
+// Not necessary if using the default common chunk, this is already included
+// Used for interop between angular 1.x and polymer 1.x bindings
+import 'websdk/build/vendors/angupoly';
 
 // Load needed some websdk dependencies
 import {AngularModule as ComponentModule} from 'websdk/essential/module/angular';
-
 
 // Include needed parts of the app
 import lib from './lib';
 
 // Include the paper input
-import 'clean!web!paper-input/paper-input.html';
+import 'paper-input/paper-input.html';
 
 // Include some files from this application
 import './welcome';
-import './welcome/title/title.web';
+import './welcome/title/title.html';
 
 // We will enable the logging for demo purposes
 // FOR DEMO PURPOSES, USUALLY YOU WOULD TYPE THIS INTO THE CONSOLE AS NEEDED

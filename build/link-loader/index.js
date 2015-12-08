@@ -26,7 +26,9 @@ module.exports = function(content) {
     code = Array.prototype.map.call(scripts,function(currentScript){
       if(currentScript.attribs && currentScript.attribs.src){
         var path = currentScript.attribs.src;
-        return 'require("clean!'+(path[0].match(/\./)?path:('./'+path))+'");'
+        if( path[0]==='~' ) path = path.slice(1);
+        else if( path[0]!=='.') path = './'+path;
+        return 'require("'+path+'");'; // TODO: Allow external server requests
       }
       else if(currentScript.children && currentScript.children[0] && currentScript.children[0].data){
         return currentScript.children[0].data;
@@ -46,7 +48,7 @@ module.exports = function(content) {
       var path = htmlImport.attribs.href;
       if( path[0]==='~' ) path = path.slice(1);
       else if( path[0]!=='.') path = './'+path;
-      return 'require("clean!web!'+path+'");';
+      return 'require("'+path+'");'; // TODO: Allow external server requests
     }).join("\n")
   }
 

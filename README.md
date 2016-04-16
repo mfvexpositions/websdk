@@ -12,7 +12,7 @@ Features:
 
 ### How to use
 
-Use the [WebSDK Samples](https://github.com/juliostanley/websdk-samples) as a template/recepie to create a project that uses the websdk.
+Use the [WebSDK Samples](https://github.com/juliostanley/websdk-samples) as a template/recipe to create a project that uses the websdk.
 
 For the most basic usage (build system only);
 - Websdk to be a dependency in package.json

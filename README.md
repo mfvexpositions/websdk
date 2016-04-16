@@ -10,34 +10,14 @@ Features:
 - Not opinionated in terms of directory structure
 - Allows for incremental migration between frameworks
 
-### Sample code
-
-Before using this module, you should check out the samples repo.
-
-The code under [Websdk Samples](https://github.com/juliostanley/websdk-samples) is how you would write you application, the directory structure is just the suggested directory structure.
-
 ### How to use
 
-You must have node and npm installed. Your project should at least have a package json. Suggested config below:
+Use the [WebSDK Samples](https://github.com/juliostanley/websdk-samples) as a template/recepie to create a project that uses the websdk.
 
-Configure your package.json:
-```
-"dependencies": {
-    "websdk"         : "0.0.6"
-    ,"lodash"        : "3.10.1"
-    ,"bower"         : "1.7.9"
-    ,"angular"       : "1.4.7"
-    ,"jquery"        : "2.2.3"
-    ,"rimraf"        : "2.5.2"
-    ,"babel-runtime" : "5.8.34"
-}
-```
-
-Run:
-```
-npm install websdk
-```
-
+For the most basic usage (build system only);
+- Websdk to be a dependency in package.json
+- Create a build file that has ```var build = require('websdk/build'); build.run()```. You can modify ```build.conf``` to modify the defaults for webpack conf.
+- Run ```node your/new/build/file.js --od=where/to/put/the/bundles```
 
 ### Work in progress
 This is just the initial version, more to come soon. Many things supported in this release are not available in the sample code

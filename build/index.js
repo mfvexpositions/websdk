@@ -47,20 +47,31 @@ module.exports = function webpackConfig( dirName, done ) {
     ,ExtractTextPlugin = require('extract-text-webpack-plugin')
     ,fs                = require('fs')
     ,path              = require('path')
-    ,jsIncludeDir      = ['app_modules/websdk','node_modules/websdk','web_modules/websdk'].map(function(it){return path.join(it)})
-    ,jsExcludeDir      = jsIncludeDir.map(function(filepath){return path.join(filepath+'.+'+'node_modules')})
+
+    // Utility variables and functions
+    ,pathSepExp        = /\\|\/|\\\\/g
+    ,jsIncludeDir      = ['app_modules/websdk','node_modules/websdk','web_modules/websdk']
+    ,jsExcludeDir      = jsIncludeDir.map(function(filepath){return filepath+'(.+)?/node_modules'})
+    ,expressions       = {
+      jsIncludeDir        : new RegExp(jsIncludeDir.join('|'))
+      ,jsExcludeDir       : new RegExp(jsExcludeDir.join('|'))
+      ,jsAlwaysIncludeDir : /node_modules|web_modules|app_modules(\\|\/)vendor/
+    }
     ,shouldTranspile   = function(filepath){
+      filepath = filepath.replace(pathSepExp,'/'); // Use unix paths regardless. Makes these checks easier
       if(filepath &&
         (
           ( // If filepath has the jsIncludeDir, but does not include the node_modules directory under them
-            filepath.match(new RegExp(jsIncludeDir.join('|')))
-            && !filepath.match(new RegExp(jsExcludeDir.join('|')))
+            filepath.match(expressions.jsIncludeDir)
+            && !filepath.match(expressions.jsExcludeDir)
           )
           // Or the filepath has nothing to do with node_modules, web_modules or app_modules/vendor
-          || !filepath.match(/(node_modules|web_modules|app_modules(\\|\/)vendor)/)
+          || !filepath.match(expressions.jsAlwaysIncludeDir)
         )
       ) {
-        // console.log('>>>> Transpiling: '+filepath);
+        // console.log('===================================')
+        // console.log(filepath)
+        // console.log('### Transpiling: '+filepath);
         return true;
       }
     }

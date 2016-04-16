@@ -10,23 +10,34 @@ Features:
 - Not opinionated in terms of directory structure
 - Allows for incremental migration between frameworks
 
+### Sample code
+
+Before using this module, you should check out the samples repo.
+
+The code under [Websdk Samples](https://github.com/juliostanley/websdk-samples) is how you would write you application, the directory structure is just the suggested directory structure.
+
 ### How to use
+
+You must have node and npm installed. Your project should at least have a package json. Suggested config below:
+
+Configure your package.json:
+```
+"dependencies": {
+    "websdk"         : "0.0.6"
+    ,"lodash"        : "3.10.1"
+    ,"bower"         : "1.7.9"
+    ,"angular"       : "1.4.7"
+    ,"jquery"        : "2.2.3"
+    ,"rimraf"        : "2.5.2"
+    ,"babel-runtime" : "5.8.34"
+}
+```
+
+Run:
 ```
 npm install websdk
 ```
 
-### Sample code
-The code under [./samples](./samples) is how you would write you application, the directory structure is just the suggested directory structure.
-
-### How to test
-The simplest way is to run the code under samples.
-
-Clone this repository wihtin a directory named **node_modules/websdk** (any self created directory).
-```
-npm install
-npm run build
-npm start
-```
 
 ### Work in progress
 This is just the initial version, more to come soon. Many things supported in this release are not available in the sample code

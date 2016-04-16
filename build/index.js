@@ -47,8 +47,26 @@ module.exports = function webpackConfig( dirName, done ) {
     ,ExtractTextPlugin = require('extract-text-webpack-plugin')
     ,fs                = require('fs')
     ,path              = require('path')
-    ,includeDir        = fs.readdirSync(argv.cwd).filter(function(it){return !it.match(/node_modules|web_modules/)}).map(function(it){return 'websdk.'+it})
-    ,config            = {
+    ,jsIncludeDir      = ['app_modules/websdk','node_modules/websdk','web_modules/websdk'].map(function(it){return path.join(it)})
+    ,jsExcludeDir      = jsIncludeDir.map(function(filepath){return path.join(filepath+'.+'+'node_modules')})
+    ,shouldTranspile   = function(filepath){
+      if(filepath &&
+        (
+          ( // If filepath has the jsIncludeDir, but does not include the node_modules directory under them
+            filepath.match(new RegExp(jsIncludeDir.join('|')))
+            && !filepath.match(new RegExp(jsExcludeDir.join('|')))
+          )
+          // Or the filepath has nothing to do with node_modules, web_modules or app_modules/vendor
+          || !filepath.match(/(node_modules|web_modules|app_modules(\\|\/)vendor)/)
+        )
+      ) {
+        // console.log('>>>> Transpiling: '+filepath);
+        return true;
+      }
+    }
+
+    // Configuration for webpack
+    ,config = {
       // Configuration specific to the websdk
       websdk : {
         defaultFiles               : null // If user has set to a value no dynamic default files will be used
@@ -79,11 +97,11 @@ module.exports = function webpackConfig( dirName, done ) {
       }
       // To resolve loaders
       ,resolveLoader: {
-        // These are default configuration, kept here as a reference
-        modulesDirectories : ['web_loaders', 'web_modules', 'node_loaders', 'node_modules', 'build']
+        // The default configuration can be found at https://webpack.github.io/docs/configuration.html#resolveloader
+        modulesDirectories : ['node_modules', 'node_modules/websdk/build', 'node_modules/websdk/node_modules', 'app_modules/websdk/node_modules']
         ,extensions        : ['', '.webpack-loader.js', '.web-loader.js', '.loader.js', '.js']
         ,packageMains      : ['webpackLoader', 'webLoader', 'loader', 'main']
-        ,moduleTemplates   : ['*-webpack-loader', '*-web-loader', '*-loader']
+        ,moduleTemplates   : ['*-loader']
         // Adding alias for babel and web loader
         ,alias : {
           es2015 : 'babel?optional[]=runtime'
@@ -95,8 +113,7 @@ module.exports = function webpackConfig( dirName, done ) {
       ,module  : {
         loaders: [
           // Javascript excluding node_modules and web_modules except for this library
-           { test: /\.js$/, loader: 'es2015'+stripLog, exclude: /(node_modules|web_modules)/ }
-          ,{ test: /\.js$/, loader: 'es2015'+stripLog, include: new RegExp(includeDir.join('|')) }
+          { test: /\.js$/, loader: 'es2015'+stripLog, include: shouldTranspile }
           ,{ test: /\.less$/, loader: 'style!css'+ (allowSM ? '?sourceMap=true' : '') +'!less' + (allowSM ? '?sourceMap=true' : '') }
           ,{ test: /\.yaml$/, loader: 'json!yaml' }
 
@@ -124,6 +141,9 @@ module.exports = function webpackConfig( dirName, done ) {
           // jQuery has an AMD bug, and needs to be patched for now
           ,{ test: path.resolve(require.resolve('jquery'),'../../src/selector.js'), loader: 'amd-define-factory-patcher-loader'}
         ]
+      }
+      ,htmlLoader: {
+        collapseBooleanAttributes: false
       }
     }
   ;

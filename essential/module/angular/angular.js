@@ -69,7 +69,7 @@ export class AngularModule {
       }
 
       // If we have a moduleNode then bootstrap the app there
-      moduleNode.innerHTML = this.tmpl;
+      if(this.tmpl) moduleNode.innerHTML = this.tmpl;
       this.lib.angular.bootstrap(moduleNode,[this.settings.name]);
 
       // Enhance the ngApp

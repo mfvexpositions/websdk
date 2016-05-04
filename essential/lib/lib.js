@@ -27,7 +27,7 @@ class EssentialLib {
     this.__libConfig = undefined;
   }
   preRegister(initializer){
-    this.initializers.unshif( initializer );
+    this.initializers.unshift( initializer );
     if(this.loaded) this.init();
   }
   register(initializer){

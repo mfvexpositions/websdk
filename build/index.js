@@ -112,7 +112,7 @@ module.exports = function webpackConfig( dirName, done ) {
         modulesDirectories : ['node_modules', 'node_modules/websdk/build', 'node_modules/websdk/node_modules', 'app_modules/websdk/node_modules']
         ,extensions        : ['', '.webpack-loader.js', '.web-loader.js', '.loader.js', '.js']
         ,packageMains      : ['webpackLoader', 'webLoader', 'loader', 'main']
-        ,moduleTemplates   : ['*-loader']
+        ,moduleTemplates   : ['*-webpack-loader', '*-web-loader', '*-loader', '*']
         // Adding alias for babel and web loader
         ,alias : {
           es2015 : 'babel?optional[]=runtime'

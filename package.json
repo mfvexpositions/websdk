@@ -1,6 +1,6 @@
 {
   "name"        : "websdk",
-  "version"     : "0.0.7",
+  "version"     : "0.0.8",
   "description" : "Web SDK is a set of conventions and code to provide modularity and lazy loading for angular, polymer, and others under a unified and simplified build approach through webpack",
   "main"        : "build/index.js",
   "scripts": {
@@ -39,7 +39,6 @@
     ,"debug"             :"2.2.0"
     ,"font-awesome"      :"4.4.0"
     ,"jquery"            :"2.1.4"
-    ,"jquery-ui"         :"1.10.5"
     ,"lodash"            :"3.10.1"
     ,"moment"            :"2.10.6"
     ,"sizzle"            :"2.2.1"
@@ -55,6 +54,10 @@
     ,"html-loader"                       :"0.4.3"
     ,"json-loader"                       :"0.5.4"
     ,"less"                              :"2.5.3"
+    ,"node-sass"                         :"3.4.2"
+    ,"sass-loader"                       :"3.1.2"
+    ,"compass-mixins"                    :"0.12.7"
+    ,"node-bourbon"                      :"4.2.3"
     ,"less-loader"                       :"2.2.2"
     ,"loader-utils"                      :"0.2.12"
     ,"optimist"                          :"0.6.1"

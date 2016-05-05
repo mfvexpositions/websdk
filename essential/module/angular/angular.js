@@ -20,18 +20,26 @@ export class AngularModule {
 
     this.tmpl     = tmpl;
     this.lib      = lib; // keep a reference to the library
+    this.config   = config;
     this.ngApp    = undefined;
-    this.injector = undefined;
+    this.injector = undefined; // to be provided when bootstrapping
 
-    try { this.ngApp = angular.module(settings.name) }
-    catch(e){ this.ngApp = angular.module(settings.name, settings.dependencies||[]) }
+    // The config are a requirment
+    if(!this.config.angular){
+      throw new Error(`
+        Angular is missing. You must provide config as the 1st parameter when creating an AngularModule.
+        Please use the pattern { angular: require('angular') }, you may also need to include other config like jquery
+      `)
+    }
+
+    try { this.ngApp = this.config.angular.module(settings.name) }
+    catch(e){ this.ngApp = this.config.angular.module(settings.name, settings.dependencies||[]) }
 
     // Config is the currenlty running configuration to which any app module/lib would be added
-    this.lib.angular = config.angular; // Add the version of angular being used to the library in case someone needs it. REVIEW: This is under review
-    
-    // REVIEW: Config needs more review so it can interact with multiple frameworks? But this should be flexible enough
-    this.config = objectExtend(config, {
-      ngApp: this.ngApp
+    this.lib.injector = undefined;
+    this.config       = objectExtend(config, {
+      ngApp     : this.ngApp
+      ,injector : this.injector // To be provided when bootstrapping
     });
 
     // Settings are the properties for the module regardless of where it is being incorporated
@@ -53,14 +61,44 @@ export class AngularModule {
     autoload && this.scheduleInit();
   }
 
+  // To have a custom initialization other the DOMContentLoaded, extend the class and add an init method
   scheduleInit(){
-    document.addEventListener('DOMContentLoaded',()=>{
 
+    // If this object has an initializer perform that and exit
+    if(this.init){
+      var self = this;
+      self.init(this.ngApp, function initDone(injector){
+        // Notify about our action
+        debug(`Booting ${self.settings.name} at ${self.settings.selector}`, self.settings);
+
+        // Set the injector
+        self.config.injector = self.lib.injector = self.injector = injector;
+
+        // Add a few more propertie to the ngApp, like an easy way to get services instead of going through
+        // lib.injector.get -> ngApp.getService
+        var moduleNode = document.querySelector(self.settings.selector);
+        if(!moduleNode) {
+          var msg = `Did not find a tag "<${self.settings.selector}>" on which to initiate the app`;
+          debug(msg);
+          if(console&&console.warn) console.warn(msg);
+          return;
+        }
+
+        // Enhance the ngApp
+        self.enhanceNgApp(moduleNode);
+      });
+
+      // Exit, as a custom initializer exists
+      return;
+    }
+
+    // Bootstrap the app until all dom elements are loaded
+    document.addEventListener('DOMContentLoaded',()=>{
       // Notify about our action
       debug(`Booting ${this.settings.name} at ${this.settings.selector}`, this.settings);
 
       // Bootstrap the this.ngApp using the selector (should be a tag name)
-      var moduleNode = document.getElementsByTagName(this.settings.selector)[0];
+      var moduleNode = document.querySelector(this.settings.selector);
       if(!moduleNode) {
         var msg = `Did not find a tag "<${this.settings.selector}>" on which to initiate the app`;
         debug(msg);
@@ -70,11 +108,11 @@ export class AngularModule {
 
       // If we have a moduleNode then bootstrap the app there
       if(this.tmpl) moduleNode.innerHTML = this.tmpl;
-      this.lib.angular.bootstrap(moduleNode,[this.settings.name]);
+      this.config.injector = this.lib.injector = this.injector = this.config.angular.bootstrap(moduleNode,[this.settings.name]);
 
       // Enhance the ngApp
       this.enhanceNgApp(moduleNode);
-    })
+    });
   }
 
   // Add properties to the angular.module instance $element, getService, etc...
@@ -84,9 +122,6 @@ export class AngularModule {
 
     // Add a method to obtain services from this.ngApp
     this.ngApp.getService = (service)=>{
-      if (!this.injector) {
-        this.injector = angular.element(this.ngApp.$element).injector();
-      }
       return this.injector.get(service);
     }
   }

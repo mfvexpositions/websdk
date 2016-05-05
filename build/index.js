@@ -22,6 +22,7 @@ module.exports = function webpackConfig( dirName, done ) {
     .alias('kl','keep-log').boolean('kl').describe('kl', 'Weather to keep the logs or remove them')
     .alias('w','watch').boolean('w').describe('w', 'Watch files that change. Only watches compiled files')
     .alias('sm','sourcemap').boolean('sm').describe('sm', 'Force sourcemap to be enabled and use --dt')
+    .alias('smcss', 'sourcemapscss').boolean('smcss').describe('smcss','Force sourcemap for css/less/scss to be enabled and use --dt')
     .alias('dt','devtool').describe('dt', 'Choose a developer tool. File size increases')
     .alias('dd','dedupe').boolean('dd').describe('dd', 'Dedupe files in order to descrize file size')
     .alias('env','environment').describe('env', 'Choose environment. dev, qa or prod')
@@ -40,6 +41,7 @@ module.exports = function webpackConfig( dirName, done ) {
     ,dedupe            = argv.dd
     ,profile           = argv.pf
     ,allowSM           = argv.sm || (env!=='prod') // If not prod then source maps are allowed
+    ,allowSMCSS        = argv.smcss
     ,stripLog          = argv.kl || (argv.env!=='prod'&&!argv.kl) ? '' : '!strip?strip[]=debug,strip[]=console.log'
     ,webpack           = require('webpack')
     ,defaultFilePlugin = require('./plugin/DirectoryDynamicDefaultFilePlugin')
@@ -83,6 +85,9 @@ module.exports = function webpackConfig( dirName, done ) {
         defaultFiles               : null // If user has set to a value no dynamic default files will be used
         ,dynamicDefaultFilesIgnore : /debug$/ // Ignoring some directories, that are know to belong to modules with files named the same as the directory
         
+        // If previous artifact builds should remain
+        ,disableClean : false
+
         // Lib is used to create chunks that can later be lazy loaded
         // Libs should include, <index>.js, lib.js and settings.yaml
         // They should export form their <index>.js the lib.init function
@@ -125,8 +130,15 @@ module.exports = function webpackConfig( dirName, done ) {
         loaders: [
           // Javascript excluding node_modules and web_modules except for this library
           { test: /\.js$/, loader: 'es2015'+stripLog, include: shouldTranspile }
-          ,{ test: /\.less$/, loader: 'style!css'+ (allowSM ? '?sourceMap=true' : '') +'!less' + (allowSM ? '?sourceMap=true' : '') }
+
+          // Styles
+          ,{ test: /\.css$/, loader: 'style!css'+ (allowSMCSS ? '?sourceMap=true' : '') }
+          ,{ test: /\.less$/, loader: 'style!css'+ (allowSMCSS ? '?sourceMap=true' : '') +'!less' + (allowSMCSS ? '?sourceMap=true' : '') }
+          ,{ test: /\.(sass|scss)$/, loader: 'style!css'+ (allowSMCSS ? '?sourceMap=true' : '') +'!sass?includePaths[]=' + require('node-bourbon').includePaths + "&includePaths[]" + path.resolve(path.join(__dirname,'../../compass-mixins/lib')) + (allowSMCSS ? '?sourceMap=true' : '') }
+
+          // Config files
           ,{ test: /\.yaml$/, loader: 'json!yaml' }
+          ,{ test: /\.json$/, loader: 'json!json' }
 
           // Use htm extenstion for html files that should be loaded as strings
           // In case of an extension html, then use require("!!html!file-path") as needed
@@ -146,6 +158,8 @@ module.exports = function webpackConfig( dirName, done ) {
 
           // Images
           ,{ test: /\.png/, loader: 'url?name='+fileDir+'/[hash].[ext]&limit=10000&mimetype=image/png' }
+          ,{ test: /\.jpg/, loader: 'url?name='+fileDir+'/[hash].[ext]&limit=10000&mimetype=image/jpg' }
+          ,{ test: /\.gif/, loader: 'url?name='+fileDir+'/[hash].[ext]&limit=10000&mimetype=image/gif' }
           ,{ test: /\.svg/, loader: 'url?name='+fileDir+'/[hash].[ext]&limit=10000&mimetype=image/svg+xml' }
         
           // special loader for vendor modules
@@ -159,12 +173,10 @@ module.exports = function webpackConfig( dirName, done ) {
     }
   ;
 
-  // Clear the output directory
-  rmDir(argv.od);
-
   // Add more settings to the configuration
   var allowDevtool = (!!devtool) && env!=='prod';
   if(allowDevtool||allowSM) config.devtool = devtool;
+  if(allowDevtool||allowSMCSS) config.devtool = devtool;
 
   // Create vendor entries
   // TODO: This approach copies the entire vendor library even if not used, find a better solution
@@ -184,6 +196,7 @@ module.exports = function webpackConfig( dirName, done ) {
     ], ['normal'])
     ,new webpack.optimize.CommonsChunkPlugin( /*bundlename*/ 'common', /*filename*/ 'common.bundle.js' )
     ,new ExtractTextPlugin('[name].css')
+    ,new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en/) // Do not allow all locales to be loaded for moment. TODO: Figure out how to allow it if needed
   )
   // Remove the logging module from source
   // if(stripLog){
@@ -231,8 +244,8 @@ module.exports = function webpackConfig( dirName, done ) {
     }
 
     if(profile){
-      var filePath = path.resolve(dirName,'..',profile,'.stats.json')
-      console.log('Saving profile to: '+filePath);
+      var filePath = path.resolve(dirName,'..','profile.stats.json')
+      console.log('Saving profile to: ' + filePath);
       console.log('Visualize profile using (it will not be actually uploaded): http://webpack.github.io/analyse');
       fs.writeFileSync( filePath, JSON.stringify(jsonStats) );
     }
@@ -247,6 +260,11 @@ module.exports = function webpackConfig( dirName, done ) {
     ,run    : function(){
       // Create the chunk splits
       createChunkSplits(config, dirName);
+
+      // Clean the directory if needed
+      if(!config.websdk.disableClean){
+        rmDir(argv.od);
+      }
 
       // Notify about the action
       console.log('Building from scratch, this might take some time');

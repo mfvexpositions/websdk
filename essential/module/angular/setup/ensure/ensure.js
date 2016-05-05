@@ -37,7 +37,7 @@ export function setup(lib, config, settings){
         debug('Rendering after loading "${tAttrs.import}"');
 
         // Transclude and link the DOM tree !(transclude)(scope, link)
-        !(lib.getService('$compile')( content ))(
+        !(lib.getService('$compile', true)( content ))(
           scope,
           function chunkTransclusion( contentClone, $scope ){
             element.empty();
@@ -52,7 +52,7 @@ export function setup(lib, config, settings){
 
           // Now we can proceed with the compilation
           var
-            shell       = element // angular.element( element )
+            shell       = element // lib.angular.element( element )
             ,shellScope = shell.scope()
           ;
 
@@ -62,7 +62,7 @@ export function setup(lib, config, settings){
             return;
           }
 
-          lib.getService('$compile')(tmpl)(shell.scope(), function(c){ shell.append(c); });
+          lib.getService('$compile', true)(tmpl)(shell.scope(), function(c){ shell.append(c); });
 
           // Load the chunk
           loader(config, function firstLoad(){

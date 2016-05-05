@@ -5,7 +5,6 @@
 // Specially full libraries like angular, jquery, etc is a no go, ask the apps to configure
 // those globals within the __libConfig, so basically the config given during init
 
-import strCapitalize from 'lodash/string/capitalize';
 import Debug from '../log';
 var
   debug = Debug('essential:lib')
@@ -19,9 +18,13 @@ class EssentialLib {
     throw new Error('You must implement getId(name), in order to use this feature from EssentialLib. Return a unique component name with a prefix.');
   }
   constructor(){
-    this.loaded = false;
+    this.loaded       = false;
     this.initializers = [];
-    this.settings = this.getSettings();
+    this.settings     = this.getSettings();
+
+    // As a ease of access expose libraries (THEY SHOULD NOT BE USED OUTSIDE OF INITIALIZERS)
+    this.angular = undefined;
+    this.jquery  = undefined;
 
     // Do not access from outside
     this.__libConfig = undefined;
@@ -36,7 +39,11 @@ class EssentialLib {
   }
   init(config){
     // Only set the configuration once
-    if(!this.__libConfig) this.__libConfig = config;
+    if(!this.__libConfig) {
+      this.__libConfig = config;
+      this.angular     = config.angular;
+      this.jquery      = config.jquery;
+    }
 
     // Notify about the action
     debug(`Hello ${this.settings.name} Running ${this.initializers.length} initializers`, this.initializers);

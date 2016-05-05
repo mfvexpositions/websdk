@@ -1,5 +1,5 @@
 
-import objectExtend from 'lodash/object/extend';
+import objectExtend from 'lodash/extend';
 import setup from './setup';
 import Debug from '../../log';
 

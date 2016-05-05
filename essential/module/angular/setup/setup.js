@@ -1,5 +1,5 @@
 
-import objExtend from 'lodash/object/extend';
+import objExtend from 'lodash/extend';
 import * as Ensure from './ensure';
 import Debug from '../../../log';
 

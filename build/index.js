@@ -88,6 +88,9 @@ module.exports = function webpackConfig( dirName, done ) {
         // If previous artifact builds should remain
         ,disableClean : false
 
+        // Common takes care of bundling the most common packages
+        ,enableCommon : false
+
         // Lib is used to create chunks that can later be lazy loaded
         // Libs should include, <index>.js, lib.js and settings.yaml
         // They should export form their <index>.js the lib.init function
@@ -134,7 +137,7 @@ module.exports = function webpackConfig( dirName, done ) {
           // Styles
           ,{ test: /\.css$/, loader: 'style!css'+ (allowSMCSS ? '?sourceMap=true' : '') }
           ,{ test: /\.less$/, loader: 'style!css'+ (allowSMCSS ? '?sourceMap=true' : '') +'!less' + (allowSMCSS ? '?sourceMap=true' : '') }
-          ,{ test: /\.(sass|scss)$/, loader: 'style!css'+ (allowSMCSS ? '?sourceMap=true' : '') +'!sass?includePaths[]=' + require('node-bourbon').includePaths + "&includePaths[]" + path.resolve(path.join(__dirname,'../../compass-mixins/lib')) + (allowSMCSS ? '?sourceMap=true' : '') }
+          ,{ test: /\.(sass|scss)$/, loader: 'style!css'+ (allowSMCSS ? '?sourceMap=true' : '') + '!resolve-url' + (allowSMCSS ? '?sourceMap=true' : '') + '!sass?' + (allowSMCSS ? '?sourceMap=true' : '') }
 
           // Config files
           ,{ test: /\.yaml$/, loader: 'json!yaml' }
@@ -170,6 +173,12 @@ module.exports = function webpackConfig( dirName, done ) {
       ,htmlLoader: {
         collapseBooleanAttributes: false
       }
+      ,sassLoader: {
+        includePaths: [
+          require('node-bourbon').includePaths
+          ,path.resolve(path.join(__dirname,'../../compass-mixins/lib'))
+        ]
+      }
     }
   ;
 
@@ -178,10 +187,7 @@ module.exports = function webpackConfig( dirName, done ) {
   if(allowDevtool||allowSM) config.devtool = devtool;
   if(allowDevtool||allowSMCSS) config.devtool = devtool;
 
-  // Create vendor entries
-  // TODO: This approach copies the entire vendor library even if not used, find a better solution
   var defaultFiles = ['index'];
-  config.entry.common = __dirname + '/vendors/bundle.js'; // Common modules between entry files will go here (should be the first file to be loaded)
   config.plugins.push(
     new webpack.ResolverPlugin([
       new defaultFilePlugin(function(path){
@@ -194,10 +200,12 @@ module.exports = function webpackConfig( dirName, done ) {
         return ['index',name];
       })
     ], ['normal'])
-    ,new webpack.optimize.CommonsChunkPlugin( /*bundlename*/ 'common', /*filename*/ 'common.bundle.js' )
-    ,new ExtractTextPlugin('[name].css')
-    ,new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en/) // Do not allow all locales to be loaded for moment. TODO: Figure out how to allow it if needed
-  )
+  );
+
+  // Add some more plugins
+  config.plugins.push(new ExtractTextPlugin('[name].css'));
+  config.plugins.push(new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en/)); // Do not allow all locales to be loaded for moment. TODO: Figure out how to allow it if needed
+
   // Remove the logging module from source
   // if(stripLog){
   //   config.plugin.push(new webpack.NormalModuleReplacementPlugin(/websdk\/essential\/log/, __dirname + '/noop.js'));
@@ -264,6 +272,14 @@ module.exports = function webpackConfig( dirName, done ) {
       // Clean the directory if needed
       if(!config.websdk.disableClean){
         rmDir(argv.od);
+      }
+
+      // Common loads the most common libraries, and the ones needed for integration
+      if(config.websdk.enableCommon){
+        // Create vendor entries
+        // TODO: This approach copies the entire vendor library even if not used, find a better solution
+        config.entry.common = __dirname + '/vendors/bundle.js'; // Common modules between entry files will go here (should be the first file to be loaded)
+        config.plugins.push(new webpack.optimize.CommonsChunkPlugin( /*bundlename*/ 'common', /*filename*/ 'common.bundle.js' ));
       }
 
       // Notify about the action

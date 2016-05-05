@@ -1,7 +1,4 @@
 // The code is from https://github.com/matjaz/angu-poly
-// REVIEW: The library was not minification friendly out of the box
-// soon ng min will be available in the build and ths can be removed
-// from the websdk
 angular.module('angupoly', [])
 .directive('angupoly', ['$parse',function($parse) {
   return {

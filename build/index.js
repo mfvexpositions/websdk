@@ -1,3 +1,6 @@
+// To support older versions of node
+if(typeof Promise === 'undefined') global.Promise = require('promise');
+
 // Main module
 module.exports = function webpackConfig( dirName, done ) {
 
@@ -207,13 +210,13 @@ module.exports = function webpackConfig( dirName, done ) {
   var defaultFiles = ['index'];
   config.plugins.push(
     plugins.resolver = new webpack.ResolverPlugin([
-      new defaultFilePlugin(function(path){
+      new defaultFilePlugin(function(fpath){
         // Check if default files should be modified
         if(config.websdk.defaultFiles) return config.websdk.defaultFiles;
-        if(path.match(config.websdk.dynamicDefaultFilesIgnore)) return ['index'];
+        if(fpath.match(config.websdk.dynamicDefaultFilesIgnore)) return ['index'];
 
         // Otherwise add the directory name as the possible default file name too
-        var name = path.split('\\').pop();
+        var name = fpath.split(path.sep).pop();
         return ['index',name];
       })
     ], ['normal'])

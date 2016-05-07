@@ -1,5 +1,7 @@
 # Web SDK
 
+[![Circle CI](https://circleci.com/gh/juliostanley/websdk-samples.svg?style=svg)](https://circleci.com/gh/juliostanley/websdk-samples)
+
 | The websdk is a library to ease the creation of progressive web apps. It eases the use of multiple frameworks within the same build and overall application. Frameworks like **Angular**, **Polymer** and **ReactJS** (pending react integration). In tandem with npm and some node_modules it can replace most/all of the need for **grunt**, **gulp**, **vulcanize** and **crisp**. It uses **babel** to enable ES2015 features, even for you polymer web components in .html or .web
 
 Features:

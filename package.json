@@ -1,6 +1,6 @@
 {
   "name"        : "websdk",
-  "version"     : "1.0.0",
+  "version"     : "1.0.1",
   "description" : "Web SDK is a set of conventions and code to provide modularity and lazy loading for angular, polymer, and others under a unified and simplified build approach through webpack",
   "main"        : "build/index.js",
   "scripts": {
@@ -34,6 +34,7 @@
   "homepage": "https://juliostanley.github.io/websdk",
   "dependencies": {
     "lodash" : "4.11.2"
+    ,"debug" :  "2.2.0"
     
     ,"lesshat"        : "3.0.2"
     ,"compass-mixins" : "0.12.7"
@@ -63,6 +64,8 @@
     ,"html-minifier"                     :"1.0.0"
     ,"noop-loader"                       :"1.0.0"
     ,"exports-loader"                    :"0.6.3"
+
+    ,"promise" : "7.1.1"
   },
   "devDependencies": {}
 }

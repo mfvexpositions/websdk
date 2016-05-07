@@ -2,7 +2,15 @@
 
 [![Circle CI](https://circleci.com/gh/juliostanley/websdk-samples.svg?style=svg)](https://circleci.com/gh/juliostanley/websdk-samples)
 
-| The websdk is a library to ease the creation of progressive web apps. It eases the use of multiple frameworks within the same build and overall application. Frameworks like **Angular**, **Polymer** and **ReactJS** (pending react integration). In tandem with npm and some node_modules it can replace most/all of the need for **grunt**, **gulp**, **vulcanize** and **crisp**. It uses **babel** to enable ES2015 features, even for you polymer web components in .html or .web
+> See some samples at http://websdk.fullvi.com
+
+The websdk is a library to ease the creation of progressive web apps. It eases the use of multiple frameworks within the same build and overall application. 
+
+Use frameworks like **Angular**, **Polymer** and **ReactJS** (pending react integration) in the same app.
+
+Using **websdk** and **npm scripts** you can replace most/all of the needs for **grunt**, **gulp**, **vulcanize** and **crisp**. It uses **babel** to enable ES2015 efeatures even for you polymer web components in .html or .web.
+
+The project is possible thanks to many other great libraries, look at *package.json* dependencies.
 
 Features:
 - Simple build system (based on webpack):
@@ -13,7 +21,7 @@ Features:
 - **build** Not opinionated in terms of directory structure
 - **build** Minification of your files when running --env prod flag
 - **build** Bundling of files
-- - **build** "Not" opinionated in terms of dependency manager (use bower or npm). Suggested to use npm, *bower_components* must be *web_modules* (you can still use bower_components by changing the build.config)
+- **build** "Not" opinionated in terms of dependency manager (use bower or npm). Suggested to use npm, *bower_components* must be *web_modules* (you can still use bower_components by changing the build.config)
 
 ### How to use
 
@@ -44,8 +52,8 @@ node ./your-build.js --od=artifacts --w
 Create an **./index.html**
 ```
 <!DOCTYPE html><html><head></head><body>
-<script src="artifacts/style.bundle.js"
-<script src="artifacts/start.bundle.js"
+<script src="artifacts/style.bundle.js"></script>
+<script src="artifacts/start.bundle.js"></script>
 </body></html>
 ```
 
@@ -90,6 +98,7 @@ This is just the initial version, more to come soon. Many things supported in th
   ,"start"              : "live-server --path=./gui"
   ,"postinstall"        : "bower install"
   ,"postupdate"         : "bower update"
+  ,"postprune"          : "bower prune"
   ,"build"              : "node ./tools/build.js --od ./gui/artifacts"
   ,"build:some"         : "node ./tools/build.js --od ./gui/artifacts --sc some,maybeother"
   ,"build:help"         : "node ./tools/build.js --help"
@@ -100,20 +109,29 @@ This is just the initial version, more to come soon. Many things supported in th
   ,"build:watch:raw"    : "node ./tools/build.js --od ./gui/artifacts --w --devtool="
   ,"build:debug"        : "node ./tools/build.js --od ./gui/artifacts --w --env prod --kl --sm"
   ,"build:debug:css"    : "node ./tools/build.js --od ./gui/artifacts --w --env prod --kl --sm --smcss"
-  ,"build:dist"         : "node ./tools/build.js --od ./gui/artifacts --w --env prod"
+  ,"build:dist"         : "node ./tools/build.js --od ./gui/artifacts --env prod"
   ,"sdk:link"           : "rimraf ./node_modules/websdk && cd ./node_modules && sudo cmd /c mklink /D websdk ..\\app_modules\\websdk"
   ,"deps"               : "npm list --depth=0"
   ,"git:nicer"          : "git config diff.submodule log"
 }
 ```
 
-## Things to notice or not obvious in the samples
+### Things to notice or not obvious in the samples
+
 - Open your console and look at the logs
+
 - Angular is mixed with polymer
+
 - HTML Imports are allowed, and work with webpack notice [demo.js](./samples/src/web/app_modules/demo) and [title-polymer.html](./samples/src/web/app_modules/demo/welcome/title-polymer)
+
 - The build supports chunks by using ```build.config.websdk.lib = {name:'path'}```
+
 - Chunks can be loaded async using ```<ensure import="">content pending</ensure>```
+
 - Paper elements and angular code are bundled
+
 - No link tag blocking rendering (try throttling your connection), the site weights under 2K uncompressed, you prob want to stop the live-server and use a standard HTTP server
+
 - Changes to files take around one second since webpack only needs to do partial rebuilds when watching files
+
 - The build supports source maps and complete minification (even of HTML imports)

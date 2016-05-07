@@ -1,10 +1,11 @@
 {
   "name"        : "websdk",
-  "version"     : "0.1.0",
+  "version"     : "1.0.0",
   "description" : "Web SDK is a set of conventions and code to provide modularity and lazy loading for angular, polymer, and others under a unified and simplified build approach through webpack",
   "main"        : "build/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+    ,"deps": "npm list --depth=0"
   },
   "repository": {
     "type" : "git",
@@ -61,6 +62,7 @@
     ,"cheerio"                           :"0.19.0"
     ,"html-minifier"                     :"1.0.0"
     ,"noop-loader"                       :"1.0.0"
+    ,"exports-loader"                    :"0.6.3"
   },
   "devDependencies": {}
 }

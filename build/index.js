@@ -15,6 +15,7 @@ module.exports = function webpackConfig( dirName, done ) {
       ,env  : 'dev'
       ,dd   : false
       ,pf   : null
+      ,sc   : 'all'
     })
     .alias('od','out-dir').describe('od', 'The directory were the bundles should be saved at')
     .alias('pp','public-path').describe('pp', 'The pulbic path for the bundled files')
@@ -27,12 +28,14 @@ module.exports = function webpackConfig( dirName, done ) {
     .alias('dd','dedupe').boolean('dd').describe('dd', 'Dedupe files in order to descrize file size')
     .alias('env','environment').describe('env', 'Choose environment. dev, qa or prod')
     .alias('pf','profile').describe('pf', 'Enable the profiling during compilation. --pf someName')
+    .alias('sc','scope').describe('sc', 'Define a scope. --sc all,myapp,otherentry')
     .demand(['od'])
     .argv
   ;
 
   var
     run                = !argv.w
+    ,scope             = argv.scope.split(',')
     ,outDir            = argv.od
     ,publicPath        = argv.pp
     ,fileDir           = argv.fp 
@@ -44,6 +47,7 @@ module.exports = function webpackConfig( dirName, done ) {
     ,allowSMCSS        = argv.smcss
     ,stripLog          = argv.kl || (argv.env!=='prod'&&!argv.kl) ? '' : '!strip?strip[]=debug,strip[]=console.log'
     ,webpack           = require('webpack')
+    // ,ProgressPlugin    = require("webpack/lib/ProgressPlugin")
     ,defaultFilePlugin = require('./plugin/DirectoryDynamicDefaultFilePlugin')
     // ,ngAnnotate     = require('ng-annotate-webpack-plugin')
     ,ExtractTextPlugin = require('extract-text-webpack-plugin')
@@ -78,6 +82,13 @@ module.exports = function webpackConfig( dirName, done ) {
       }
     }
 
+    // Keep a list of the loaders and expose it to the build
+    ,loaders = {}
+
+    // Keep a list of the plugins and expose it to the build
+    ,plugins = {}
+
+
     // Configuration for webpack
     ,config = {
       // Configuration specific to the websdk
@@ -90,6 +101,15 @@ module.exports = function webpackConfig( dirName, done ) {
 
         // Common takes care of bundling the most common packages
         ,enableCommon : false
+
+        // When polymer is enabled the extension .html is used for html-imports
+        ,enableHtmlImport : false
+
+        // Allow webpack progress to be shown
+        ,progress: true
+
+        // Cache the build files
+        ,cache: {}
 
         // Lib is used to create chunks that can later be lazy loaded
         // Libs should include, <index>.js, lib.js and settings.yaml
@@ -123,7 +143,7 @@ module.exports = function webpackConfig( dirName, done ) {
         ,moduleTemplates   : ['*-webpack-loader', '*-web-loader', '*-loader', '*']
         // Adding alias for babel and web loader
         ,alias : {
-          es2015 : 'babel?optional[]=runtime'
+          sdkes  : 'babel?optional[]=runtime'
           ,web   : 'link' + (env!=='dev' ? '?minifyHTML=true' : '')
           ,clean : stripLog ? stripLog.replace(/!/,'') : 'noop'
         }
@@ -132,42 +152,39 @@ module.exports = function webpackConfig( dirName, done ) {
       ,module  : {
         loaders: [
           // Javascript excluding node_modules and web_modules except for this library
-          { test: /\.js$/, loader: 'es2015'+stripLog, include: shouldTranspile }
+          loaders.ES    = { test: /\.js$/, loader: 'sdkes'+stripLog, include: shouldTranspile }
 
           // Styles
-          ,{ test: /\.css$/, loader: 'style!css'+ (allowSMCSS ? '?sourceMap=true' : '') }
-          ,{ test: /\.less$/, loader: 'style!css'+ (allowSMCSS ? '?sourceMap=true' : '') +'!less' + (allowSMCSS ? '?sourceMap=true' : '') }
-          ,{ test: /\.(sass|scss)$/, loader: 'style!css'+ (allowSMCSS ? '?sourceMap=true' : '') + '!resolve-url' + (allowSMCSS ? '?sourceMap=true' : '') + '!sass?' + (allowSMCSS ? '?sourceMap=true' : '') }
+          ,loaders.css  = { test: /\.css$/, loader: 'style!css'+ (allowSMCSS ? '?sourceMap=true' : '') }
+          ,loaders.less = { test: /\.less$/, loader: 'style!css'+ (allowSMCSS ? '?sourceMap=true' : '') +'!less' + (allowSMCSS ? '?sourceMap=true' : '') }
+          ,loaders.less = { test: /\.(sass|scss)$/, loader: 'style!css'+ (allowSMCSS ? '?sourceMap=true' : '') + '!resolve-url' + (allowSMCSS ? '?sourceMap=true' : '') + '!sass?' + (allowSMCSS ? '?sourceMap=true' : '') }
 
           // Config files
-          ,{ test: /\.yaml$/, loader: 'json!yaml' }
-          ,{ test: /\.json$/, loader: 'json!json' }
+          ,loaders.yaml = { test: /\.yaml$/, loader: 'json!yaml' }
+          ,loaders.json = { test: /\.json$/, loader: 'json!json' }
 
           // Use htm extenstion for html files that should be loaded as strings
           // In case of an extension html, then use require("!!html!file-path") as needed
-          ,{ test: /\.htm$/, loader: 'html' }
+          ,loaders.html = { test: /\.htm$/, loader: 'html', exclude: /((web_modules|node_modules)(\/|\\|\.)polymer|paper-|iron-|carbon-|font-)/ }
 
           // HTML Imports
-          // Since we are already using html for standard html in order to 
-          // use the web loader the extension of the file must be .web
-          // this will enable the usage of <link rel="import"> and allow
-          // es2015 to be used against it
-          ,{ test: /\.html$/, loader: 'es2015'+stripLog+'!web', exclude: /(polymer|paper-|iron-)/ }
-          ,{ test: /\.html$/, loader: 'clean!web', include: /(polymer|paper-|iron-)/ }
+          // Enable the usage of <link rel="import"> and allow sdkes to be used against it
+          ,loaders.importES = { test: /\.html$/, loader: 'sdkes'+stripLog+'!web', exclude: /((web_modules|node_modules)(\/|\\|\.)polymer|paper-|iron-|carbon-|font-)/ }
+          ,loaders.import   = { test: /\.html$/, loader: 'clean!web', include: /((web_modules|node_modules)(\/|\\|\.)polymer(\/|\\|\.)|paper-|iron-|carbon-|font-)/ }
 
           // Fonts
-          ,{ test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader?name='+fileDir+'/[hash].[ext]'}
-          ,{ test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'url-loader?name='+fileDir+'/[hash].[ext]&lmit=10000&mimetype=application/font-woff'}
+          ,loaders.ttf  = { test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader?name='+fileDir+'/[hash].[ext]'}
+          ,loaders.woff = { test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'url-loader?name='+fileDir+'/[hash].[ext]&lmit=10000&mimetype=application/font-woff'}
 
           // Images
-          ,{ test: /\.png/, loader: 'url?name='+fileDir+'/[hash].[ext]&limit=10000&mimetype=image/png' }
-          ,{ test: /\.jpg/, loader: 'url?name='+fileDir+'/[hash].[ext]&limit=10000&mimetype=image/jpg' }
-          ,{ test: /\.gif/, loader: 'url?name='+fileDir+'/[hash].[ext]&limit=10000&mimetype=image/gif' }
-          ,{ test: /\.svg/, loader: 'url?name='+fileDir+'/[hash].[ext]&limit=10000&mimetype=image/svg+xml' }
+          ,loaders.png  = { test: /\.png/, loader: 'url?name='+fileDir+'/[hash].[ext]&limit=10000&mimetype=image/png' }
+          ,loaders.jpg  = { test: /\.jpg/, loader: 'url?name='+fileDir+'/[hash].[ext]&limit=10000&mimetype=image/jpg' }
+          ,loaders.gif  = { test: /\.gif/, loader: 'url?name='+fileDir+'/[hash].[ext]&limit=10000&mimetype=image/gif' }
+          ,loaders.svg  = { test: /\.svg/, loader: 'url?name='+fileDir+'/[hash].[ext]&limit=10000&mimetype=image/svg+xml' }
         
           // special loader for vendor modules
           // jQuery has an AMD bug, and needs to be patched for now
-          ,{ test: path.resolve(require.resolve('jquery'),'../../src/selector.js'), loader: 'amd-define-factory-patcher-loader'}
+          ,loaders.definePatch = { test: path.resolve(require.resolve('jquery'),'../../src/selector.js'), loader: 'amd-define-factory-patcher-loader'}
         ]
       }
       ,htmlLoader: {
@@ -189,7 +206,7 @@ module.exports = function webpackConfig( dirName, done ) {
 
   var defaultFiles = ['index'];
   config.plugins.push(
-    new webpack.ResolverPlugin([
+    plugins.resolver = new webpack.ResolverPlugin([
       new defaultFilePlugin(function(path){
         // Check if default files should be modified
         if(config.websdk.defaultFiles) return config.websdk.defaultFiles;
@@ -203,8 +220,8 @@ module.exports = function webpackConfig( dirName, done ) {
   );
 
   // Add some more plugins
-  config.plugins.push(new ExtractTextPlugin('[name].css'));
-  config.plugins.push(new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en/)); // Do not allow all locales to be loaded for moment. TODO: Figure out how to allow it if needed
+  config.plugins.push(plugins.extract = new ExtractTextPlugin('[name].css'));
+  config.plugins.push(plugins.context = new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en/)); // Do not allow all locales to be loaded for moment. TODO: Figure out how to allow it if needed
 
   // Remove the logging module from source
   // if(stripLog){
@@ -215,11 +232,12 @@ module.exports = function webpackConfig( dirName, done ) {
   if(env!=='dev') {
 
     config.plugins.push(
+      // NOT PROMOTING THIS. DO NOT ENABLE. DEVELOPERS SHOULD TYPE THEIR DEPS AND NOT SLOW DOWN BUILD
       // new ngAnnotate({
       //   add        : true
       //   ,sourcemap : allowDevtool
       // })
-      new webpack.optimize.UglifyJsPlugin({
+      plugins.uglify = new webpack.optimize.UglifyJsPlugin({
         compress: {
           warnings: false
         }
@@ -241,12 +259,20 @@ module.exports = function webpackConfig( dirName, done ) {
     if(jsonStats.warnings.length > 0)
       throw jsonStats.warnings.join();
 
-    console.log(stats.toString({colors:true}));
-    console.log('=========================');
+    var moduleCount='N/A';
+    if(config.websdk.cache){
+      moduleCount = Object.keys(config.websdk.cache).length;
+    }
+
+    // Only show the stats if progress is not enabled
+    if(!config.websdk.progress) console.log(stats.toString({colors:true}));
+    console.log('====================================');
     console.log('Webpack completed build');
     console.log('Output dir was set to ', outDir);
     // TODO: Review why stripLog is making files non-cacheable during build
     if(stripLog) console.log('WARNING: You should use the flag --kl in order to keep the logs and allow files to be cacheable');
+    if(config.websdk.cache){ console.log('Cached: '+moduleCount+' modules'); }
+    console.log('If you need stats then run with --profile flag or disable config.websdk.progress.');
     if(!run){
       console.log('Webpack has locked this process. Watching file that were part of the build.');
     }
@@ -259,19 +285,29 @@ module.exports = function webpackConfig( dirName, done ) {
     }
 
     // If a done method is configured, then execute it
-    done && done(err,stats);
+    done && done(err, stats, this, config.websdk.cache); // this => webpack compiler
   }
 
   return {
-    argv    : argv
-    ,config : config
-    ,run    : function(){
+    argv     : argv
+    ,scope   : scope
+    ,config  : config
+    ,plugins : plugins
+    ,loaders : loaders // Provides a direct reference to the loaders, so users can modify extensions, includes, etc as needed. They can always just remove/add items from the list config.module.loaders
+    ,run     : function(){
       // Create the chunk splits
       createChunkSplits(config, dirName);
 
       // Clean the directory if needed
       if(!config.websdk.disableClean){
         rmDir(argv.od);
+      }
+
+      // If the user does not want polymer/html-imports enabled, then disable the loader and allow html to be loaded as a string
+      if(!config.websdk.enableHtmlImport){
+        loaders.importES.test = /\.web$/; // They will still be available if the extension is htmlx
+        loaders.import.test   = /\.html$/; // Leave this one, since it has an explicit include, chances of collision are low, and they can still use .htmlx without problems
+        loaders.html.test     = /\.(htm|html)$/; // Html is back to normal string loading
       }
 
       // Common loads the most common libraries, and the ones needed for integration
@@ -289,14 +325,39 @@ module.exports = function webpackConfig( dirName, done ) {
       // Create the compiler
       var compiler = webpack(config);
 
+      // Check if the cache is enabled
+      if(config.websdk.cache) {
+        compiler.apply(new webpack.CachePlugin(config.websdk.cache));
+      }
+
+      // Check if the progress shuld be added
+      if(config.websdk.progress){
+        var chars = 0;
+        compiler.apply(new webpack.ProgressPlugin(function(percentage, msg) {
+          if(percentage < 1) {
+            percentage = Math.floor(percentage * 100);
+            msg = percentage + "% " + msg;
+            if(percentage < 100) msg = " " + msg;
+            if(percentage < 10) msg = " " + msg;
+          }
+          for(; chars > msg.length; chars--)
+            process.stdout.write("\b \b");
+          chars = msg.length;
+          for(var i = 0; i < chars; i++)
+            process.stdout.write("\b");
+          process.stdout.write(msg);
+        }));
+      }
+
+
       if(run){
-        compiler.run(handleCompile)
+        compiler.run(handleCompile.bind(compiler))
       } else {
         compiler.watch({
           aggregateTimeout: 300 // Wait so long for more changes
           // ,poll: true // Use polling instead of native watchers
           // pass a number to set the polling interval
-        },handleCompile);
+        },handleCompile.bind(compiler));
       }
     }
   }

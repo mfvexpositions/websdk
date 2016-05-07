@@ -4,3 +4,5 @@ node_modules
 web_modules
 **/public/artifacts
 **/assets/artifacts
+
+npm-debug.log

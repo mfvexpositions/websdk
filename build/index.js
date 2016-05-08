@@ -36,6 +36,11 @@ module.exports = function webpackConfig( dirName, done ) {
     .argv
   ;
 
+  // This is a special case in case websdk is being used for frontend development
+  var amdPathcingTest = null;
+  try{ amdPathcingTest = path.resolve( require.resolve('jquery'),'../../src/selector.js') }
+  catch(err){} // jQuery is not needed
+
   var
     run                = !argv.w
     ,scope             = argv.scope.split(',')
@@ -91,7 +96,6 @@ module.exports = function webpackConfig( dirName, done ) {
     // Keep a list of the plugins and expose it to the build
     ,plugins = {}
 
-
     // Configuration for webpack
     ,config = {
       // Configuration specific to the websdk
@@ -104,6 +108,9 @@ module.exports = function webpackConfig( dirName, done ) {
 
         // Common takes care of bundling the most common packages
         ,enableCommon : false
+
+        // Libraries to match for amd patching
+        ,amdPathcingTest : amdPathcingTest
 
         // When polymer is enabled the extension .html is used for html-imports
         ,enableHtmlImport : false
@@ -184,10 +191,6 @@ module.exports = function webpackConfig( dirName, done ) {
           ,loaders.jpg  = { test: /\.jpg/, loader: 'url?name='+fileDir+'/[hash].[ext]&limit=10000&mimetype=image/jpg' }
           ,loaders.gif  = { test: /\.gif/, loader: 'url?name='+fileDir+'/[hash].[ext]&limit=10000&mimetype=image/gif' }
           ,loaders.svg  = { test: /\.svg/, loader: 'url?name='+fileDir+'/[hash].[ext]&limit=10000&mimetype=image/svg+xml' }
-        
-          // special loader for vendor modules
-          // jQuery has an AMD bug, and needs to be patched for now
-          ,loaders.definePatch = { test: path.resolve(require.resolve('jquery'),'../../src/selector.js'), loader: 'amd-define-factory-patcher-loader'}
         ]
       }
       ,htmlLoader: {
@@ -201,6 +204,16 @@ module.exports = function webpackConfig( dirName, done ) {
       }
     }
   ;
+
+  // Add a few more loaders if needed
+  // special loader for vendor modules
+  // jQuery has an AMD bug, and needs to be patched for now
+  amdPathcingTest = amdPathcingTest || config.websdk.amdPathcingTest;
+  if(amdPathcingTest){
+    config.module.loaders.push(
+      loaders.definePatch = { test: amdPathcingTest, loader: 'amd-define-factory-patcher-loader'}
+    );
+  }
 
   // Add more settings to the configuration
   var allowDevtool = (!!devtool) && env!=='prod';

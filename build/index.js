@@ -167,7 +167,7 @@ module.exports = function webpackConfig( dirName, done ) {
           // Styles
           ,loaders.css  = { test: /\.css$/, loader: 'style!css'+ (allowSMCSS ? '?sourceMap=true' : '') }
           ,loaders.less = { test: /\.less$/, loader: 'style!css'+ (allowSMCSS ? '?sourceMap=true' : '') +'!less' + (allowSMCSS ? '?sourceMap=true' : '') }
-          ,loaders.less = { test: /\.(sass|scss)$/, loader: 'style!css'+ (allowSMCSS ? '?sourceMap=true' : '') + '!resolve-url' + (allowSMCSS ? '?sourceMap=true' : '') + '!sass?' + (allowSMCSS ? '?sourceMap=true' : '') }
+          ,loaders.sass = { test: /\.(sass|scss)$/, loader: 'style!css'+ (allowSMCSS ? '?sourceMap=true' : '') + '!resolve-url' + (allowSMCSS ? '?sourceMap=true' : '') + '!sass?' + (allowSMCSS ? '?sourceMap=true' : '') }
 
           // Config files
           ,loaders.yaml = { test: /\.yaml$/, loader: 'json!yaml' }
@@ -183,8 +183,8 @@ module.exports = function webpackConfig( dirName, done ) {
           ,loaders.import   = { test: /\.html$/, loader: 'clean!web', include: /((web_modules|node_modules)(\/|\\|\.)polymer(\/|\\|\.)|paper-|iron-|carbon-|font-)/ }
 
           // Fonts
-          ,loaders.ttf  = { test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader?name='+fileDir+'/[hash].[ext]'}
-          ,loaders.woff = { test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'url-loader?name='+fileDir+'/[hash].[ext]&lmit=10000&mimetype=application/font-woff'}
+          ,loaders.ttf  = { test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader?name='+fileDir+'/[hash].[ext]&limit=10000&mimetype=application/x-font-ttf'}
+          ,loaders.woff = { test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'url-loader?name='+fileDir+'/[hash].[ext]&limit=10000&mimetype=application/font-woff'}
 
           // Images
           ,loaders.png  = { test: /\.png/, loader: 'url?name='+fileDir+'/[hash].[ext]&limit=10000&mimetype=image/png' }

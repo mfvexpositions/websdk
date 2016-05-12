@@ -1,6 +1,6 @@
 {
   "name"        : "websdk",
-  "version"     : "1.0.4",
+  "version"     : "1.0.5",
   "description" : "Web SDK is a set of conventions and code to provide modularity and lazy loading for angular, polymer, and others under a unified and simplified build approach through webpack",
   "main"        : "build/index.js",
   "scripts": {

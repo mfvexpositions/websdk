@@ -39,7 +39,7 @@ Create **./your-build.js**
 var build = require('websdk/build');
 build.config.output.publicPath = '/artifacts/'; // Server url path
 build.config.websdk.enableHtmlImport = false; // .web ext for html imports
-build.config.entry.style = __dirname + '/any/file/for.css'; // Or less or sass
+build.config.entry.style = __dirname + '/any/file/for.css'; // Or less or sass/scss
 build.config.entry.start = __dirname + '/any/file/for.js'; // JavaScript
 build.run();
 ```

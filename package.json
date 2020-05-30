@@ -34,7 +34,7 @@
   "homepage": "https://juliostanley.github.io/websdk",
   "dependencies": {
     "lodash" : "4.11.2"
-    ,"debug" :  "2.2.0"
+    ,"debug" :  "4.1.1"
     
     ,"lesshat"        : "3.0.2"
     ,"compass-mixins" : "0.12.7"
